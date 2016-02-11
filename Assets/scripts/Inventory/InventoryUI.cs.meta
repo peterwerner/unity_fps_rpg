@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9f829358b04a5c34eb9dae95dd43dbc7
+timeCreated: 1455004228
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - GUIskin: {fileID: 11400000, guid: 58f63e6395e01784689c860ffe94aea9, type: 2}
+  - tileTexture: {fileID: 2800000, guid: 6c9086eb4504b2244bed98b77e71eeb8, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
