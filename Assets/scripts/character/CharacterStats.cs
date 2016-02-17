@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-using RootMotion.Dynamics;
+//using RootMotion.Dynamics;
 
 public class CharacterStats : Damageable {
 
@@ -8,10 +8,9 @@ public class CharacterStats : Damageable {
 
 	public float healthMax = 100f;
 	public float health = 100f;
-	[Tooltip("Reference to the PuppetMaster component.")]
-	public PuppetMaster puppetMaster;
+	//public PuppetMaster puppetMaster;
 	[Tooltip("Settings for killing and freezing the puppet.")]
-	public PuppetMaster.StateSettings stateSettings = PuppetMaster.StateSettings.Default;
+	//public PuppetMaster.StateSettings stateSettings = PuppetMaster.StateSettings.Default;
 
 	private CharacterStats.State state = State.ALIVE;
 
@@ -39,16 +38,16 @@ public class CharacterStats : Damageable {
 	public void Knockout()
 	{
 		state = State.UNCONSCIOUS;
-		if (puppetMaster != null)
-			puppetMaster.Kill(stateSettings);
+		//if (puppetMaster != null)
+			//puppetMaster.Kill(stateSettings);
 	}
 
 
 	public void Kill() 
 	{
 		state = State.DEAD;
-		if (puppetMaster != null)
-			puppetMaster.Kill(stateSettings);
+		//if (puppetMaster != null)
+			//puppetMaster.Kill(stateSettings);
 	}
 
 
@@ -62,8 +61,8 @@ public class CharacterStats : Damageable {
 			return;
 		state = State.ALIVE;
 		health = Mathf.Max(newHealth, healthMax);
-		if (puppetMaster != null)
-			puppetMaster.Resurrect();
+		//if (puppetMaster != null)
+			//puppetMaster.Resurrect();
 	}
 	
 }

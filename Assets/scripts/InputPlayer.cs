@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityStandardAssets.CrossPlatformInput;
-using UnityStandardAssets.Characters.FirstPerson;
 
 /**
  *  Handle user input from the player
@@ -12,36 +11,26 @@ public class InputPlayer : MonoBehaviour {
 	new public Camera camera;
 	public float maxUseDist = 1;
 	public LayerMask layerMask;			// Layermask for interacting with the world
-	public InventoryUI inventoryUI;
-	public FirstPersonController controller;
-	public Crosshair crosshair;
 	public AimTarget aimTarget;
+	public PauseUI pauseUi;
 
 	private Inventory inventory;	// Inventory to interact with
-	private float timeScalePrev;
-	private CameraFx cameraFx;
 
 		
-	void Start () {
+	void Start () 
+	{
 		this.inventory = GetComponent<Inventory>();
-		cameraFx = camera.GetComponent<CameraFx>();
 	}
 
 
 	// Update is called once per frame
-	void Update () {
+	void Update () 
+	{
 		if (CrossPlatformInputManager.GetButtonDown("OpenInventory")) {
-			if (!inventoryUI.IsEnabled()) {
-				ActivateUI();
-				inventoryUI.Enable();
-			}
-			else {
-				DeactivateUI();
-				inventoryUI.Disable();
-			}
+			pauseUi.Toggle();
 		}
 
-		if (!inventoryUI.IsEnabled())
+		if (!pauseUi.IsActive())
 		{
 			/* USE KEY - interact with the world */
 			if (CrossPlatformInputManager.GetButtonDown("Use"))
@@ -55,7 +44,7 @@ public class InputPlayer : MonoBehaviour {
 					// Attempt to equip item to inventory
 					Equipable equipable = objHit.GetComponent<Equipable>();
 					if (equipable != null) {
-						inventory.Equip(equipable.GetEquipment());
+						inventory.AddItem(equipable.GetEquipment());
 					}
 
 					// Attempt to use useable objects in the world
@@ -75,33 +64,11 @@ public class InputPlayer : MonoBehaviour {
 
 			if (CrossPlatformInputManager.GetButtonDown("Fire3")) 
 				inventory.TakeInput(Inventory.InputType.DROP_CURRENT_ITEM);
+
+			if (CrossPlatformInputManager.GetButtonDown("Reload")) 
+				inventory.TakeInput(Inventory.InputType.WEAPON_RELOAD);
 		
 		}
 	}
-
-
-	/**
-	 * 	Activate / Deactivate UI mode
-	 * 	Disable character controller input
-	 * 	Hide crosshair
-	 */
-	private void ActivateUI()
-	{
-		if (crosshair)
-			crosshair.enabled = false;
-		controller.ActivateGuiMode();
-		timeScalePrev = Time.timeScale;
-		Time.timeScale = 0;
-		if(cameraFx)
-			cameraFx.ActivateMenuEffects();
-	}
-	private void DeactivateUI()
-	{
-		if (crosshair)
-			crosshair.enabled = true;
-		controller.DeactivateGuiMode();
-		Time.timeScale = timeScalePrev;
-		if(cameraFx)
-			cameraFx.DeactivateMenuEffects();
-	}
+		
 }

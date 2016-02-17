@@ -1,22 +1,25 @@
 ﻿using UnityEngine;
 using System.Collections;
-using RootMotion.Dynamics;
+//using RootMotion.Dynamics;
+using System.Collections.Generic;
 
 
 [RequireComponent (typeof(AudioSource))]
 public class GunHitscan : Equipment {
-
 
 	public float impactDamage = 10f;
 	public float impactForce = 10f;
 	public float shotDelay = 0.05f; 	// Min delay between shots (controls rate of fire)
 	public float maxRange = 500f;		// Max range a bullet can travel
 	public bool automatic = false;		// Automatic (click and hold) vs Semi-automatic (click per shot)
+	public int clipSize = 10;
+	public Ammo.Type ammoType;
 	public AudioClip audioShoot;
 	public LayerMask layers;
 	public ParticleSystem particleImpact;
 
 	protected Transform aimOriginTransform;
+	private int numBulletsLoaded;
 	private float timeSinceLastShot = 0f;
 	private AudioSource audioSrc;
 	private Camera aimCamera;			// Optional camera to use for aiming directly at the center of the screen
@@ -28,6 +31,7 @@ public class GunHitscan : Equipment {
 
 		aimOriginTransform = transform;
 		audioSrc = GetComponent<AudioSource>();
+		numBulletsLoaded = clipSize;
 	}
 
 	// Update is called once per frame
@@ -48,6 +52,8 @@ public class GunHitscan : Equipment {
 			Shoot();
 		else if (input == Inventory.InputType.WEAPON_FIRE1 && automatic)
 			Shoot();
+		else if (input == Inventory.InputType.WEAPON_RELOAD)
+			Reload();
 	}
 
 
@@ -67,36 +73,41 @@ public class GunHitscan : Equipment {
 	 */ 
 	private bool Shoot()
 	{
-		if (timeSinceLastShot >= shotDelay) 
-		{
-			// Fire the bullet ray
-			RaycastHit hit = new RaycastHit();	
-			Ray ray = new Ray(aimOriginTransform.position, aimTarget.target - aimOriginTransform.position);
-			if (Physics.Raycast(ray, out hit, maxRange, layers)) 
-			{
-				// Spawn impact particle
-				if (particleImpact) {
-					particleImpact.transform.position = hit.point;
-					particleImpact.transform.rotation = Quaternion.LookRotation(hit.normal);
-					particleImpact.Emit(5);
-				}
+		if (timeSinceLastShot < shotDelay) 
+			return false;
 
-				// Damage object
-				Damageable damageable = hit.collider.GetComponentInParent<Damageable>();
-				if (damageable)
-					damageable.Damage(impactDamage, impactForce, hit, ray.direction);
+		if (numBulletsLoaded <= 0)
+			return false;
+
+		// Fire the bullet ray
+		RaycastHit hit = new RaycastHit();	
+		Ray ray = new Ray(aimOriginTransform.position, aimTarget.target - aimOriginTransform.position);
+		if (Physics.Raycast(ray, out hit, maxRange, layers)) 
+		{
+			// Spawn impact particle
+			if (particleImpact) {
+				particleImpact.transform.position = hit.point;
+				particleImpact.transform.rotation = Quaternion.LookRotation(hit.normal);
+				particleImpact.Emit(5);
 			}
 
-			// Debug - draw the bullet ray
-			if (hit.distance <= 0.01f)	hit.distance = 100f;
-			Debug.DrawRay(ray.origin, ray.direction.normalized * hit.distance, Color.white, 0.5f);	
-
-			PlayShootSound();
-
-			timeSinceLastShot = 0;
-			return true;
+			// Damage object
+			Damageable damageable = hit.collider.GetComponentInParent<Damageable>();
+			if (damageable)
+				damageable.Damage(impactDamage, impactForce, hit, ray.direction);
 		}
-		return false;
+
+		// Debug - draw the bullet ray
+		if (hit.distance <= 0.01f)	hit.distance = 100f;
+		Debug.DrawRay(ray.origin, ray.direction.normalized * hit.distance, Color.white, 0.5f);	
+
+		PlayShootSound();
+
+		timeSinceLastShot = 0;
+
+		numBulletsLoaded--;
+
+		return true;
 	}
 
 	// Play the gunshot sound
@@ -105,6 +116,20 @@ public class GunHitscan : Equipment {
 		if (audioSrc != null && audioShoot != null) {
 			audioSrc.PlayOneShot(audioShoot);
 		}
+	}
+
+
+	/**
+	 * Attempt to reload the weapon
+	 */
+	private bool Reload()
+	{
+		if (!ConsumeClip())
+			return false;
+
+		numBulletsLoaded = clipSize;
+
+		return true;
 	}
 
 
@@ -137,5 +162,44 @@ public class GunHitscan : Equipment {
 
 		return true;
 	}
+
+
+	/**
+	 * Look in the inventory and return the number of clips available
+	 */
+	public int GetNumClips()
+	{
+		if (inventory == null)
+			return 0;
+		int count = 0;
+		List<Equipment> invItems = inventory.GetItems();
+		foreach (Equipment item in invItems) {
+			Ammo ammo = item.GetComponent<Ammo>();
+			if (ammo && ammo.type == this.ammoType)
+				count++;
+		}
+		return count;
+	}
+	/**
+	 * Remove 1 ammo clip from the inventory
+	 */
+	private bool ConsumeClip()
+	{
+		if (inventory == null)
+			return false;
+		List<Equipment> invItems = inventory.GetItems();
+		foreach (Equipment item in invItems) {
+			Ammo ammo = item.GetComponent<Ammo>();
+			if (ammo && ammo.type == this.ammoType) {
+				inventory.DeleteItem(item);
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+
+	public int GetNumBulletsLoaded() { return numBulletsLoaded; }
 
 }

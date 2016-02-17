@@ -16,8 +16,9 @@ public class Equipment : MonoBehaviour {
 	public Equipable equipablePrefab;	// Corresponding world item prefab
 	public Equipable equipable;
 	public Vector3 dropOffset;			// Offset from the camera position when the equipable is dropped
-	[SerializeField] public InventoryGridItem inventoryGridItem;	// Corresponding UI grid item
+	public InventoryGridItem inventoryGridItem;		// Corresponding UI grid item
 	protected AimTarget aimTarget;		// Tracks what this equipment is aiming at
+	[HideInInspector] public Inventory inventory;	// Inventory this currently belongs to
 	/* Viewmodel */
 	public ViewModel viewModelPrefab;	// view model prefab
 	protected ViewModel viewModel;		// view model - this is only utilized for the player character

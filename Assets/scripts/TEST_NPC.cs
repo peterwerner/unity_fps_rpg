@@ -24,7 +24,7 @@ public class TEST_NPC : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (gunToEquip != null) {
-			inv.Equip(gunToEquip);
+			inv.AddItem(gunToEquip);
 			gunToEquip = null;
 		}
 		aimTarget.target = this.transform.position + 100f * this.transform.forward;

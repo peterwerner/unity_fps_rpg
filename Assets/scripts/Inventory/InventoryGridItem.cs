@@ -8,8 +8,10 @@ public class InventoryGridItem {
 	public Texture2D texture, textureHotkey;
 	[Tooltip("Width and height in terms of number tiles")]
 	[Range(1,10)] public int width = 1, height = 1;
-	[HideInInspector] public int x, y;	// x,y coords of the top left corner in terms of tiles
+	public bool autoAddToHotkey = false;
 	[SerializeField] private Equipment equipment;
+
+	[HideInInspector] public int x, y;	// x,y coords of the top left corner in terms of tiles
 
 	public InventoryGridItem(InventoryGridItem copy)
 	{
@@ -32,5 +34,5 @@ public class InventoryGridItem {
 	{
 		return equipment;
 	}
-
+		
 }

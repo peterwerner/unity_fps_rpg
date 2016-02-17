@@ -3,15 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityStandardAssets.CrossPlatformInput;
 
-[RequireComponent(typeof(InventoryGrid))]
-public class InventoryUI : MonoBehaviour {
+public class InventoryUI : BaseUI {
 
-	public GUISkin GUIskin;
-	public Texture2D tileTexture, tileTextureActive;
-	private bool isEnabled = false;
-	[SerializeField] private float padding_y = 0.2f;
-	[SerializeField] private float padding_x = 0.2f;
-	[SerializeField] private float tilePadding = 0.05f;
+	[SerializeField] private InventoryGrid inventoryGrid;
+	[SerializeField] private Texture2D tileTexture, tileTextureActive;
+	[SerializeField] private float doubleClickMaxDelay = 0.25f;
+	private bool isGridEnabled = false;
+	[SerializeField] [Range(0f, 1f)] private float padding_y = 0.2f;
+	[SerializeField] [Range(0f, 1f)] private float padding_x = 0.2f;
+	[SerializeField] private float tilePadding = 0f;
 	private int numTilesX, numTilesY;
 	private int numHotkeys;
 	private float invWidthToHeightRatio;
@@ -19,10 +19,10 @@ public class InventoryUI : MonoBehaviour {
 	private float invX, invY;
 	private Rect[,] tileRects;	
 	private Rect[] hotkeyTileRects;	
-	private InventoryGrid inventoryGrid;
-	private int screenWidthPrev, screenHeightPrev;
 
 	// State information
+	private float timeLastClick = 0;			// To determine double clicks
+	private Equipment itemLastClick = null;
 	private Equipment itemSelected;				// Item currently selected
 	private Equipment itemMouseHover;			// Itenabled mouse currently hoveenableder it
 	private Equipment itemMoving;				// Item currently being moved to aenabledent position
@@ -32,37 +32,24 @@ public class InventoryUI : MonoBehaviour {
 
 	void Start ()
 	{
-		inventoryGrid = GetComponent<InventoryGrid>();
 		numTilesX = inventoryGrid.getNumTilesX();
 		numTilesY = inventoryGrid.getNumTilesY();
 		numHotkeys = inventoryGrid.getNumHotkeys();
-		screenWidthPrev = Screen.width;
-		screenHeightPrev = Screen.height;
-		UpdateTiles();
+		UpdateDimensions();
 	}
 
 
 	void OnGUI ()
 	{
-		if (isEnabled) 
-		{
-			GUI.skin = GUIskin;
-
-			DrawTiles();
-			DrawItems();
-		}
+		GUI.skin = GUIskin;
+		DrawTiles();
+		DrawItems();
 	}
 
 
 	void Update()
 	{
-		// Respond to screen size changing
-		if (Screen.width != screenWidthPrev || Screen.height != screenHeightPrev)
-			UpdateTiles();
-		screenWidthPrev = Screen.width;
-		screenHeightPrev = Screen.height;
-
-		if (isEnabled) 
+		if (isGridEnabled) 
 		{	
 			/* Determine which item the mouse is hovering over */
 			int[] mouseCoords = MouseToTileCoords();
@@ -79,6 +66,11 @@ public class InventoryUI : MonoBehaviour {
 					itemSelected = itemMouseHover;
 				else
 					itemSelected = inventoryGrid.GetHotkeyItem(MousePosToHotkey());
+				// Double click to equip
+				if (itemSelected && Time.unscaledTime - timeLastClick <= doubleClickMaxDelay && itemLastClick == itemSelected)
+					inventoryGrid.SetCurrentItem(itemSelected);
+				timeLastClick = Time.unscaledTime;
+				itemLastClick = itemSelected;
 			}
 
 			/* Remove item from hotkey */
@@ -110,16 +102,32 @@ public class InventoryUI : MonoBehaviour {
 				}
 			}
 			// Attempt to drop an item off when user let's go after click-and-drag
-			// (either into a new spot in the inventory grid or into a hotkey slot)
 			if (CrossPlatformInputManager.GetButtonUp("Fire1")) {
 				if (itemMoving) {
+					// (1) Drop it into a new spot in the grid if it fits
 					bool moved = inventoryGrid.MoveItem(itemMoving, itemMovingDummy.x, itemMovingDummy.y);
+					// (2) If 1 didn't happen, drop it into a hotkey slot if possible
 					if (!moved)
-						inventoryGrid.SetHotkeyItem(MousePosToHotkey(), itemMoving);
+						moved = inventoryGrid.SetHotkeyItem(MousePosToHotkey(), itemMoving);
+					/*
+					// (3) If 1 and 2 didn't happen, remove the item from the inventory and drop it in the world
+					if (!moved) {
+						inventoryGrid.DropItem(itemMoving);
+						if (itemSelected = itemMoving)
+							itemSelected = null;
+						for (int i = 0; i < numHotkeys; i++)
+							if (inventoryGrid.GetHotkeyItem(i) == itemMoving)
+								inventoryGrid.SetHotkeyItem(i, null);
+					}
+					*/
 				}
 				itemMoving = null;
+				itemMovingDummy = null;
 			}
+		}
 
+		else {
+			itemSelected = inventoryGrid.GetCurrentItem();
 		}
 	}
 
@@ -128,7 +136,7 @@ public class InventoryUI : MonoBehaviour {
 	 * Calculate inventory dimensions based on current screen size
 	 * Create a 2d array of Rects representing each square in the grid and in the hotkey list
 	 */
-	void UpdateTiles()
+	public override void UpdateDimensions()
 	{
 		invWidthToHeightRatio = (float)numTilesX / numTilesY;
 
@@ -163,7 +171,7 @@ public class InventoryUI : MonoBehaviour {
 		// Create tile rects for the hotkeys
 		hotkeyTileRects = new Rect[numHotkeys];
 		float hotkeysX = (Screen.width - (tileWidth * numHotkeys) - (tilePadding * (numHotkeys - 1))) / 2;
-		float hotkeysY = Screen.height - invY + (tileHeight / 2);
+		float hotkeysY = Screen.height - tileHeight - tilePadding;
 		for (int i = 0; i < numHotkeys; i++) {
 			Rect rect = new Rect(
 				hotkeysX + i * (tileWidth + tilePadding),
@@ -179,13 +187,16 @@ public class InventoryUI : MonoBehaviour {
 	// Draw the background tiles
 	private void DrawTiles()
 	{
-		for (int i = 0; i < numTilesX; i++) {
-			for (int j = 0; j < numTilesY; j++) 
-			{
-				if (itemSelected && itemSelected.inventoryGridItem.IsOnCoords(i, j) && !itemMoving)
-					GUI.DrawTexture(tileRects[i,j], tileTextureActive);
-				else
-					GUI.DrawTexture(tileRects[i,j], tileTexture);
+		if (isGridEnabled) 
+		{
+			for (int i = 0; i < numTilesX; i++) {
+				for (int j = 0; j < numTilesY; j++) 
+				{
+					if (itemSelected && itemSelected.inventoryGridItem.IsOnCoords(i, j) && !itemMoving)
+						GUI.DrawTexture(tileRects[i,j], tileTextureActive);
+					else
+						GUI.DrawTexture(tileRects[i,j], tileTexture);
+				}
 			}
 		}
 		for (int i = 0; i < numHotkeys; i++) {
@@ -200,16 +211,56 @@ public class InventoryUI : MonoBehaviour {
 	// Draw the item textures, fitted to the background tiles
 	private void DrawItems()
 	{
-		// Draw all items in inventory
-		List<Equipment> equipments = inventoryGrid.GetItems();
-		foreach (Equipment equipment in equipments) 
+		if (isGridEnabled) 
 		{
-			// If item is currently being moved, draw it at partial opacity
-			float alpha = GUI.color.a;
-			if (itemMoving && equipment == itemMoving)
-				SetAlpha(0.4f);
-			GUI.DrawTexture(RectFromGridItem(equipment.inventoryGridItem), equipment.inventoryGridItem.texture);
-			SetAlpha(alpha);
+			// Draw all items in inventory
+			List<Equipment> equipments = inventoryGrid.GetItems();
+			foreach (Equipment equipment in equipments) 
+			{
+				// If item is currently being moved, draw it at partial opacity
+				float alpha = GUI.color.a;
+				if (itemMoving && equipment == itemMoving)
+					SetAlpha(0.4f);
+				GUI.DrawTexture(RectFromGridItem(equipment.inventoryGridItem), equipment.inventoryGridItem.texture);
+				SetAlpha(alpha);
+				}
+
+			// Draw dummy item if an item is being moved
+			if (itemMoving) 
+			{
+				// If the item is dragged onto a hotkey tile, draw it on the hotkey tile
+				int hotKeyIndex = MousePosToHotkey();
+				if (hotKeyIndex >= 0) {
+					GUI.DrawTexture(hotkeyTileRects[hotKeyIndex], itemMoving.inventoryGridItem.textureHotkey);
+				}
+				// Otherwise, draw the item being moved around
+				else
+				{
+					// If the item is in outside bounds of the grid, let it follow the mouse freely
+					Rect posRect;
+					if (itemMovingDummy.x < 0 || itemMovingDummy.y < 0 || itemMovingDummy.x > numTilesX - itemMovingDummy.width || itemMovingDummy.y > numTilesY - itemMovingDummy.height) {
+						float tileWidth = tileRects[0,0].width;
+						float tileHeight = tileRects[0,0].height;
+						posRect = new Rect(
+							(Input.mousePosition - dummyOffsetPixels).x - (tileRects[0,0].width / 2),
+							Screen.height - (Input.mousePosition - dummyOffsetPixels).y - (tileRects[0,0].height / 2),
+							(tileWidth * itemMovingDummy.width) + (tilePadding * (itemMovingDummy.width - 1)),
+							(tileHeight * itemMovingDummy.height) + (tilePadding * (itemMovingDummy.height - 1))
+						);
+					}
+					// Otherwise, if the item is within the grid, snap it to the grid tiles
+					else
+						posRect = RectFromGridItem(itemMovingDummy);
+					
+					// Tint red if it is in a spot where it doesn't fit, and will not be successfully moved
+					Color color = GUI.color;
+					if (!inventoryGrid.CanItemFit(itemMovingDummy, itemMovingDummy.x, itemMovingDummy.y))
+						GUI.color = Color.red;
+					SetAlpha(0.75f);
+					GUI.DrawTexture(posRect, itemMovingDummy.texture);
+					GUI.color = color;
+				}
+			}
 		}
 
 		// Draw all hotkey items
@@ -218,43 +269,6 @@ public class InventoryUI : MonoBehaviour {
 			Equipment item = inventoryGrid.GetHotkeyItem(i);
 			if (item && !(itemMoving && MousePosToHotkey() == i))
 				GUI.DrawTexture(hotkeyTileRects[i], item.inventoryGridItem.textureHotkey);
-		}
-
-		// Draw dummy item if an item is being moved
-		if (itemMoving) 
-		{
-			// If the item is dragged onto a hotkey tile, draw it on the hotkey tile
-			int hotKeyIndex = MousePosToHotkey();
-			if (hotKeyIndex >= 0) {
-				GUI.DrawTexture(hotkeyTileRects[hotKeyIndex], itemMoving.inventoryGridItem.textureHotkey);
-			}
-			// Otherwise, draw the item being moved around
-			else
-			{
-				// If the item is in outside bounds of the grid, let it follow the mouse freely
-				Rect posRect;
-				if (itemMovingDummy.x < 0 || itemMovingDummy.y < 0 || itemMovingDummy.x > numTilesX - itemMovingDummy.width || itemMovingDummy.y > numTilesY - itemMovingDummy.height) {
-					float tileWidth = tileRects[0,0].width;
-					float tileHeight = tileRects[0,0].height;
-					posRect = new Rect(
-						(Input.mousePosition - dummyOffsetPixels).x - (tileRects[0,0].width / 2),
-						Screen.height - (Input.mousePosition - dummyOffsetPixels).y - (tileRects[0,0].height / 2),
-						(tileWidth * itemMovingDummy.width) + (tilePadding * (itemMovingDummy.width - 1)),
-						(tileHeight * itemMovingDummy.height) + (tilePadding * (itemMovingDummy.height - 1))
-					);
-				}
-				// Otherwise, if the item is within the grid, snap it to the grid tiles
-				else
-					posRect = RectFromGridItem(itemMovingDummy);
-				
-				// Tint red if it is in a spot where it doesn't fit, and will not be successfully moved
-				Color color = GUI.color;
-				if (!inventoryGrid.CanItemFit(itemMovingDummy, itemMovingDummy.x, itemMovingDummy.y))
-					GUI.color = Color.red;
-				SetAlpha(0.75f);
-				GUI.DrawTexture(posRect, itemMovingDummy.texture);
-				GUI.color = color;
-			}
 		}
 	}
 
@@ -328,17 +342,30 @@ public class InventoryUI : MonoBehaviour {
 	}
 
 
-	public bool IsEnabled()
+	public override void Hide() 
 	{
-		return isEnabled;
+		DisableGrid();
 	}
-	public void Enable()
+
+	public override void Show() 
 	{
-		isEnabled = true;
+		EnableGrid();
 	}
-	public void Disable()
+
+
+	public bool IsGridEnabled()
 	{
-		isEnabled = false;
+		return isGridEnabled;
+	}
+	public void EnableGrid()
+	{
+		isGridEnabled = true;
+	}
+	public void DisableGrid()
+	{
+		isGridEnabled = false;
+		itemMoving = null;
+		itemMovingDummy = null;
 	}
 
 }

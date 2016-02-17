@@ -12,6 +12,7 @@ public class InventoryGrid : Inventory {
 	private bool[,] gridFills;			// True if an item is taking up this spot in the grid
 	private Equipment[] hotkeyItems;	// Items assigned to the 1-9 hotkeys
 
+
 	new void Start() {
 		base.BaseStart();
 
@@ -29,14 +30,14 @@ public class InventoryGrid : Inventory {
 	 * Attempt to add an item to this grid in any spot that it will fit
 	 * Return false if no space
 	 */
-	public override bool Equip(Equipment item)
+	public override bool AddItem(Equipment item)
 	{
 		InventoryGridItem gridItem = item.inventoryGridItem;
 		for (int i = 0; i + gridItem.width <= numTilesX; i++) {
 			for (int j = 0; j + gridItem.height <= numTilesY; j++) {
 				// If the item fits, add it to the inventory
 				if (CanItemFit(item.inventoryGridItem, i, j)) {
-					bool inserted = base.Equip(item);
+					bool inserted = base.AddItem(item);
 					// If it was successfully added, add it to the grid
 					if (inserted) {
 						gridItem.x = i;
@@ -44,6 +45,15 @@ public class InventoryGrid : Inventory {
 						for (int k = 0; k < gridItem.width; k++) 
 							for (int q = 0; q < gridItem.height; q++) 
 								gridFills[gridItem.x + k, gridItem.y + q] = true;
+						// Auto add it to an available hotkey slot if the item is flagged to do so
+						if (item.inventoryGridItem.autoAddToHotkey) {
+							for (int q = 0; q < numHotkeys; q++) {
+								if (hotkeyItems[q] == null) {
+									hotkeyItems[q] = item;
+									break;
+								}
+							}
+						}
 					}
 					return inserted;
 				}
@@ -52,20 +62,25 @@ public class InventoryGrid : Inventory {
 		return false;
 	}
 
+
 	/**
-	 * Remove the item from the inventory - clear it from the grid
+	 *	Delete item from the inventory 
 	 */
-	public override void DropCurrentItem(Vector3 velocity) 
+	public override void DeleteItem(Equipment item)
 	{
-		DropItem(currentItem, velocity);
-	}
-	public override void DropItem(Equipment item, Vector3 velocity) 
-	{
-		InventoryGridItem gridItem = currentItem.inventoryGridItem;
+		InventoryGridItem gridItem = item.inventoryGridItem;
 		for (int k = 0; k < gridItem.width; k++) 
 			for (int q = 0; q < gridItem.height; q++) 
 				gridFills[gridItem.x + k, gridItem.y + q] = false;
-		base.DropItem(item, velocity);
+
+		for (int i = 0; i < numHotkeys; i++)
+			if (hotkeyItems[i] == item)
+				hotkeyItems[i] = null;
+
+		if (currentItem == item)
+			currentItem = null;
+
+		base.DeleteItem(item);
 	}
 
 
@@ -98,10 +113,15 @@ public class InventoryGrid : Inventory {
 	 */
 	public bool CanItemFit(InventoryGridItem item, int i, int j)
 	{
-		for (int k = 0; k < item.width; k++) 
-			for (int q = 0; q < item.height; q++) 
-				if (i < 0 || j < 0 || i + k >= numTilesX || j + q >= numTilesY || (gridFills[i + k, j + q] && ItemAtGridPoint(i + k, j + q) != item.GetEquipment()))
+		for (int k = 0; k < item.width; k++) {
+			for (int q = 0; q < item.height; q++) {
+				if (i < 0 || j < 0 || i + k >= numTilesX || j + q >= numTilesY)
 					return false;
+				Equipment targetItem = ItemAtGridPoint(i + k, j + q);
+				if ((gridFills[i + k, j + q] && targetItem != item.GetEquipment()))
+					return false;
+			}
+		}
 		return true;
 	}
 

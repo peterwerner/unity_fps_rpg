@@ -15,7 +15,8 @@ public class Inventory : MonoBehaviour {
 	public enum InputType { 
 		DROP_CURRENT_ITEM, 
 		WEAPON_FIRE1_DOWN,
-		WEAPON_FIRE1
+		WEAPON_FIRE1,
+		WEAPON_RELOAD
 	}
 
 	public AimTarget aimTarget;			// Passed to equipment (ie: so guns know where to aim)
@@ -46,7 +47,7 @@ public class Inventory : MonoBehaviour {
 	/**
 	 * 	Act on inputs (or pass them on to the active equipment)
 	 */
-	public void TakeInput(InputType input)
+	public virtual void TakeInput(InputType input)
 	{
 		if (input == InputType.DROP_CURRENT_ITEM) 
 		{
@@ -64,7 +65,7 @@ public class Inventory : MonoBehaviour {
 	 * 	Attempt to add equipment to this inventory
 	 *  And remove the world item
 	 */
-	public virtual bool Equip(Equipment equipment)
+	public virtual bool AddItem(Equipment equipment)
 	{
 		if (equipment == null || items.Contains(equipment))
 			return false;
@@ -73,6 +74,7 @@ public class Inventory : MonoBehaviour {
 			SetCurrentItem(equipment);
 		equipment.RemoveFromWorld();
 		equipment.SetAimTarget(aimTarget);
+		equipment.inventory = this;
 		return true;
 	}
 
@@ -80,8 +82,10 @@ public class Inventory : MonoBehaviour {
 	/**
 	 * 	Set the current item
 	 */
-	private void SetCurrentItem(Equipment equipment) 
+	public void SetCurrentItem(Equipment equipment) 
 	{
+		if (!items.Contains(equipment))
+			return;
 		// Deactivate the previous active model
 		if (currentItem != null)
 			currentItem.Deactivate();
@@ -103,21 +107,41 @@ public class Inventory : MonoBehaviour {
 	{
 		DropItem(currentItem, velocity);
 	}
+
 	/**
 	 * Drop an item
 	 */
-	public virtual void DropItem(Equipment item, Vector3 velocity) 
+	public virtual void DropItem(Equipment item)
+	{
+		DropItem(item, Vector3.zero);
+	}
+	public virtual void DropItem(Equipment item, Vector3 velocity)
 	{
 		Vector3 position = this.transform.position;
 		Quaternion rotation = this.transform.rotation;
 		// Adjust position so the item is dropped in a more natural position
 		Vector3 position_offset = position + (rotation * item.dropOffset);
+
+		DropItem(item, velocity, position_offset, rotation);
+	}
+	public virtual void DropItem(Equipment item, Vector3 velocity, Vector3 position_offset, Quaternion rotation) 
+	{
 		// Spawn the world item
 		Vector3 dropDir = transform.forward + (rotation * new Vector3(0, 0.25f, 0));
 		Vector3 dropVelocity = velocity + dropItemForce * dropDir.normalized;
 		item.SpawnInWorld(position_offset, rotation, dropVelocity);
 
+		DeleteItem(item);
+	}
+
+
+	/**
+	 *	Delete item from the inventory 
+	 */
+	public virtual void DeleteItem(Equipment item)
+	{
 		// Deactivate and Remove the item from the inventory
+		item.inventory = null;
 		item.Deactivate();
 		items.Remove(item);
 
@@ -131,9 +155,8 @@ public class Inventory : MonoBehaviour {
 	}
 
 
-	public List<Equipment> GetItems()
-	{
-		return items;
-	}
+	public List<Equipment> GetItems() { return items; }
+
+	public Equipment GetCurrentItem() { return currentItem; }
 
 }
