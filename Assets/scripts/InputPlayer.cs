@@ -13,6 +13,7 @@ public class InputPlayer : MonoBehaviour {
 	public LayerMask layerMask;			// Layermask for interacting with the world
 	public AimTarget aimTarget;
 	public PauseUI pauseUi;
+	public PickUpPhysics pickUp;
 
 	private Inventory inventory;	// Inventory to interact with
 
@@ -35,24 +36,35 @@ public class InputPlayer : MonoBehaviour {
 			/* USE KEY - interact with the world */
 			if (CrossPlatformInputManager.GetButtonDown("Use"))
 			{
-				// Cast a ray from the camera
-				RaycastHit hit;
-				Ray ray = new Ray(camera.transform.position, aimTarget.target - camera.transform.position);
-				if (Physics.Raycast(ray, out hit, maxUseDist, layerMask)) {
-					Transform objHit = hit.transform;
+				if (pickUp.IsHolding())
+					pickUp.Drop();
+				else
+				{
+					// Cast a ray from the camera
+					RaycastHit hit;
+					Ray ray = new Ray(camera.transform.position, aimTarget.target - camera.transform.position);
+					if (Physics.Raycast(ray, out hit, maxUseDist, layerMask)) {
+						Transform objHit = hit.transform;
 
-					// Attempt to equip item to inventory
-					Equipable equipable = objHit.GetComponent<Equipable>();
-					if (equipable != null) {
-						inventory.AddItem(equipable.GetEquipment());
-					}
+						// Attempt to equip item to inventory
+						Equipable equipable = objHit.GetComponent<Equipable>();
+						if (equipable != null) {
+							inventory.AddItem(equipable.GetEquipment());
+						}
 
-					// Attempt to use useable objects in the world
-					Useable useable = objHit.GetComponent<Useable>();
-					if (useable != null) {
-						useable.Use();
+						// Attempt to pickup physics objects
+						else if (!pickUp.IsHolding()) {
+							Rigidbody rb = objHit.GetComponent<Rigidbody>();
+							if (rb)
+								pickUp.Grab(rb, hit);
+						}
+
+						// Attempt to use useable objects in the world
+						Useable useable = objHit.GetComponent<Useable>();
+						if (useable != null) {
+							useable.Use();
+						}
 					}
-			
 				}
 			}
 
