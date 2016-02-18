@@ -21,6 +21,7 @@ public class HUD : MonoBehaviour {
 	{
 		leftStatsStyle = new GUIStyle();					rightStatsStyle = new GUIStyle();
 		leftStatsStyle.alignment = TextAnchor.LowerLeft;	rightStatsStyle.alignment = TextAnchor.LowerRight;
+		leftStatsStyle.normal.textColor = Color.white;		rightStatsStyle.normal.textColor = Color.white;
 		screenWidthPrev = Screen.width;
 		screenHeightPrev = Screen.height;
 		UpdateDimensions();
@@ -36,7 +37,7 @@ public class HUD : MonoBehaviour {
 		screenWidthPrev = Screen.width;
 		screenHeightPrev = Screen.height;
 
-		leftStatsString = playerStats.health + "|" + playerStats.energy;
+		leftStatsString = Mathf.CeilToInt(playerStats.health) + "|" + Mathf.CeilToInt(playerStats.energy);
 
 		GunHitscan gun = null;
 		if (inventory.GetCurrentItem())

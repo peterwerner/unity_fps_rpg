@@ -28,6 +28,10 @@ public class CharacterStats : Damageable {
 	}
 
 
+	public void Damage(float damage)
+	{
+		Damage(damage, 0, new RaycastHit(), Vector3.zero);
+	}
 	public override void Damage(float damage, float force, RaycastHit hit, Vector3 direction)
 	{
 		// Update health to reflect damage

@@ -10,7 +10,8 @@ public class PauseUI : MonoBehaviour {
 
 	public enum State { INVENTORY, OBJECTIVES };
 
-	[SerializeField] private GUISkin GUIskin;
+	[SerializeField] private GUISkin GuiSkin;
+	[SerializeField] private bool pauseGame = true;
 	[SerializeField] private Crosshair crosshair;
 	[SerializeField] private Camera cam;
 	[SerializeField] private FirstPersonController controller;
@@ -90,7 +91,7 @@ public class PauseUI : MonoBehaviour {
 		if (!isActive)
 			return;
 
-		GUI.skin = GUIskin;
+		GUI.skin = GuiSkin;
 
 		float alphaPrev = GUI.color.a;
 		Color color = GUI.color;
@@ -123,7 +124,8 @@ public class PauseUI : MonoBehaviour {
 			crosshair.enabled = false;
 		controller.ActivateGuiMode();
 		timeScalePrev = Time.timeScale;
-		Time.timeScale = 0;
+		if (pauseGame)
+			Time.timeScale = 0;
 		if(cameraFx)
 			cameraFx.ActivateMenuEffects();
 
