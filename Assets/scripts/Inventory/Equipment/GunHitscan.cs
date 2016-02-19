@@ -15,6 +15,7 @@ public class GunHitscan : Equipment {
 	public int clipSize = 10;
 	public Ammo.Type ammoType;
 	public AudioClip audioShoot;
+	public float soundLevel = 30f;
 	public LayerMask layers;
 	public ParticleSystem particleImpact;
 
@@ -115,6 +116,7 @@ public class GunHitscan : Equipment {
 	{
 		if (audioSrc != null && audioShoot != null) {
 			audioSrc.PlayOneShot(audioShoot);
+			Sound.MakeSound(this.transform, Sound.Type.GUNSHOT, soundLevel, 1);
 		}
 	}
 
