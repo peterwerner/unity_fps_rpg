@@ -20,14 +20,14 @@ public class Sound : ListComponent<Sound> {
 
 
 	// Update is called once per frame
-	void Update () 
+	void FixedUpdate () 
 	{
 		if ((lifetimeFrames > 0 && framesAlive >= lifetimeFrames) || lifetimeSec > 0 && timeAlive >= lifetimeSec) {
 			this.transform.parent = null;
 			Destroy(this.gameObject);
 		}
 		framesAlive++;
-		timeAlive += Time.deltaTime;
+		timeAlive += Time.fixedDeltaTime;
 	}
 
 

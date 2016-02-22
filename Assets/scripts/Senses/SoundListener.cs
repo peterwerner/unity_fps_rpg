@@ -1,20 +1,22 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Collections;
+using System.Collections.Generic;
 
 public class SoundListener : MonoBehaviour {
 
-	public float listenStrengthFactor = 1;
-	public LayerMask layerMask;
+	[SerializeField] private float listenStrengthFactor = 1;
+	[SerializeField] private LayerMask layerMask;
+	[HideInInspector] public List<Vector3> soundLocations;
 
 
 	// Use this for initialization
 	void Start () {
-	
+		soundLocations = new List<Vector3>();
 	}
 	
 	// Update is called once per frame
-	void Update () 
+	void FixedUpdate () 
 	{
 		if (listenStrengthFactor <= 0)
 			return;
@@ -38,7 +40,8 @@ public class SoundListener : MonoBehaviour {
 
 	private void Hear(Sound sound) 
 	{
-		print("Heard a " + sound.soundType.ToString());
+		soundLocations.Add(sound.transform.position);
+		//print("Heard a " + sound.soundType.ToString());
 	}
 
 }

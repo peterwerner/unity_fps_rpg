@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 //using RootMotion.Dynamics;
 
 public class CharacterStats : Damageable {
@@ -9,17 +10,20 @@ public class CharacterStats : Damageable {
 	public float healthMax = 100f;
 	public float health = 100f;
 	//public PuppetMaster puppetMaster;
-	[Tooltip("Settings for killing and freezing the puppet.")]
+	//[Tooltip("Settings for killing and freezing the puppet.")]
 	//public PuppetMaster.StateSettings stateSettings = PuppetMaster.StateSettings.Default;
+	[Tooltip("When killed / KO'd these behaviours will be disabled")]
+	[SerializeField] private MonoBehaviour[] lifeDependentBehaviours;
 
-	private CharacterStats.State state = State.ALIVE;
+	protected CharacterStats.State state = State.ALIVE;
 
 
 	// Use this for initialization
-	void Start () {
-		
+	void Start () 
+	{
 	}
-	
+
+
 	// Update is called once per frame
 	void Update ()
 	{
@@ -44,6 +48,7 @@ public class CharacterStats : Damageable {
 		state = State.UNCONSCIOUS;
 		//if (puppetMaster != null)
 			//puppetMaster.Kill(stateSettings);
+		disableBehaviours();
 	}
 
 
@@ -52,6 +57,7 @@ public class CharacterStats : Damageable {
 		state = State.DEAD;
 		//if (puppetMaster != null)
 			//puppetMaster.Kill(stateSettings);
+		disableBehaviours();
 	}
 
 
@@ -67,6 +73,19 @@ public class CharacterStats : Damageable {
 		health = Mathf.Max(newHealth, healthMax);
 		//if (puppetMaster != null)
 			//puppetMaster.Resurrect();
+		enableBehaviours();
+	}
+
+
+	private void disableBehaviours()
+	{
+		foreach (MonoBehaviour script in lifeDependentBehaviours)
+			script.enabled = false;
+	}
+	private void enableBehaviours()
+	{
+		foreach (MonoBehaviour script in lifeDependentBehaviours)
+			script.enabled = true;
 	}
 	
 }

@@ -93,7 +93,9 @@ public class GunHitscan : Equipment {
 			}
 
 			// Damage object
-			Damageable damageable = hit.collider.GetComponentInParent<Damageable>();
+			Damageable damageable = hit.collider.GetComponentInChildren<Damageable>();
+			if (!damageable)
+				damageable = hit.collider.GetComponentInParent<Damageable>();
 			if (damageable)
 				damageable.Damage(impactDamage, impactForce, hit, ray.direction);
 		}
