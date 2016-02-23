@@ -16,7 +16,7 @@ public class PauseUI : MonoBehaviour {
 	[SerializeField] private Camera cam;
 	[SerializeField] private FirstPersonController controller;
 	[SerializeField] BaseUI[] subInterfaces;
-	[SerializeField] [Range(0f, 1f)] private float heightTopBanner = 0.1f, alphaTopBanner = 0.5f;
+	[SerializeField] [Range(0f, 1f)] private float heightTopBanner = 0.1f, paddingBannerSide = 0.1f, alphaTopBanner = 0.5f;
 	private bool isActive = false;
 	private float timeScalePrev;
 	private CameraFx cameraFx;
@@ -76,13 +76,14 @@ public class PauseUI : MonoBehaviour {
 
 	void UpdateDimensions()
 	{
-		topBannerRect = new Rect(0, 0, Screen.width, Screen.height * heightTopBanner);
+		topBannerRect = new Rect(0, 0, Screen.width, Mathf.Min(Screen.height, Screen.width * 0.5f) * heightTopBanner);
 		for (int i = 0; i < subIfaceRects.Length; i++) {
-			float rectWidth = Screen.width / subIfaceRects.Length;
-			subIfaceRects[i] = new Rect(i * rectWidth, 0, rectWidth, topBannerRect.height);
+			float rectWidth = Screen.width * (1 - 2*paddingBannerSide) / subIfaceRects.Length - 2;
+			subIfaceRects[i] = new Rect((Screen.width*paddingBannerSide) + i * rectWidth, 0, rectWidth, topBannerRect.height);
 		}
 		foreach (BaseUI subIface in subInterfaces)
 			subIface.UpdateDimensions();
+		bannerStyle.fontSize = (int)(0.75f * topBannerRect.height);
 	}
 
 

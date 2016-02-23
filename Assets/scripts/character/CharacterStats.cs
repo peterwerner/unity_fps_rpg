@@ -43,7 +43,7 @@ public class CharacterStats : Damageable {
 	}
 
 
-	public void Knockout()
+	public virtual void Knockout()
 	{
 		state = State.UNCONSCIOUS;
 		//if (puppetMaster != null)
@@ -52,7 +52,7 @@ public class CharacterStats : Damageable {
 	}
 
 
-	public void Kill() 
+	public virtual void Kill() 
 	{
 		state = State.DEAD;
 		//if (puppetMaster != null)
@@ -65,7 +65,7 @@ public class CharacterStats : Damageable {
 	{
 		Resurrect(health);
 	}
-	public void Resurrect(float newHealth)
+	public virtual void Resurrect(float newHealth)
 	{
 		if (newHealth <= 0)
 			return;

@@ -55,6 +55,8 @@ public class HUD : MonoBehaviour {
 		float h = w * cornerStatsHeightToWidth;
 		leftStatsRect = new Rect(0, Screen.height - h, w, h);
 		rightStatsRect = new Rect(Screen.width - w, Screen.height - h, w, h);
+		leftStatsStyle.fontSize = (int)(leftStatsRect.height);
+		rightStatsStyle.fontSize = (int)(rightStatsRect.height);
 	}
 
 

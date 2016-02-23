@@ -49,6 +49,11 @@ public class InventoryUI : BaseUI {
 
 	void Update()
 	{
+		// Select item from hotkey slots
+		if (CrossPlatformInputManager.GetButtonDown("Fire1")) {
+			itemSelected = inventoryGrid.GetHotkeyItem(MousePosToHotkey());
+		}
+
 		if (isGridEnabled) 
 		{	
 			/* Determine which item the mouse is hovering over */
@@ -60,17 +65,10 @@ public class InventoryUI : BaseUI {
 					itemMouseHover = item;
 			}
 
-			/* Select item */
+			/* Select item from grid */
 			if (CrossPlatformInputManager.GetButtonDown("Fire1")) {
 				if (itemMouseHover)
 					itemSelected = itemMouseHover;
-				else
-					itemSelected = inventoryGrid.GetHotkeyItem(MousePosToHotkey());
-				// Double click to equip
-				if (itemSelected && Time.unscaledTime - timeLastClick <= doubleClickMaxDelay && itemLastClick == itemSelected)
-					inventoryGrid.SetCurrentItem(itemSelected);
-				timeLastClick = Time.unscaledTime;
-				itemLastClick = itemSelected;
 			}
 
 			/* Remove item from hotkey */
@@ -126,9 +124,11 @@ public class InventoryUI : BaseUI {
 			}
 		}
 
-		else {
-			itemSelected = inventoryGrid.GetCurrentItem();
-		}
+		// Double click to equip
+		if (itemSelected && Time.unscaledTime - timeLastClick <= doubleClickMaxDelay && itemLastClick == itemSelected)
+			inventoryGrid.SetCurrentItem(itemSelected);
+		timeLastClick = Time.unscaledTime;
+		itemLastClick = itemSelected;
 	}
 
 
@@ -360,6 +360,7 @@ public class InventoryUI : BaseUI {
 	public void EnableGrid()
 	{
 		isGridEnabled = true;
+		itemSelected = inventoryGrid.GetCurrentItem();
 	}
 	public void DisableGrid()
 	{

@@ -28,6 +28,12 @@ public class PickUpPhysics : MonoBehaviour {
 	}
 
 
+	void OnDisable()
+	{
+		Drop();
+	}
+
+
 	public bool Grab(Rigidbody rb, RaycastHit hit) 
 	{
 		if (IsHolding() || isTouchingPlayer)
