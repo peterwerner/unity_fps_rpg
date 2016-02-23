@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityStandardAssets.Characters.FirstPerson;
 using UnityStandardAssets.CrossPlatformInput;
 
 /**
@@ -8,18 +7,11 @@ using UnityStandardAssets.CrossPlatformInput;
  */
 public class PauseUI : MonoBehaviour {
 
-	public enum State { INVENTORY, OBJECTIVES };
-
 	[SerializeField] private GUISkin GuiSkin;
-	[SerializeField] private bool pauseGame = true;
-	[SerializeField] private Crosshair crosshair;
-	[SerializeField] private Camera cam;
-	[SerializeField] private FirstPersonController controller;
 	[SerializeField] BaseUI[] subInterfaces;
 	[SerializeField] [Range(0f, 1f)] private float heightTopBanner = 0.1f, paddingBannerSide = 0.1f, alphaTopBanner = 0.5f;
+	[SerializeField] CameraFx cameraFx;
 	private bool isActive = false;
-	private float timeScalePrev;
-	private CameraFx cameraFx;
 	private Texture2D topBannerTexture;
 	private GUIStyle bannerStyle;
 	private Rect topBannerRect;
@@ -35,7 +27,6 @@ public class PauseUI : MonoBehaviour {
 		subIfaceRects = new Rect[subInterfaces.Length];
 		screenWidthPrev = Screen.width;
 		screenHeightPrev = Screen.height;
-		cameraFx = cam.GetComponent<CameraFx>();
 		topBannerTexture = new Texture2D(1, 1);
 		topBannerTexture.SetPixel(0, 0, Color.black);
 		topBannerTexture.wrapMode = TextureWrapMode.Repeat;
@@ -110,48 +101,23 @@ public class PauseUI : MonoBehaviour {
 			GUI.Label(subIfaceRects[i], subInterfaces[i].displayName, bannerStyle);
 		}
 	}
-
-
-	/**
-	 * 	Activate / Deactivate UI mode
-	 * 	Disable character controller input
-	 * 	Hide crosshair
-	 */
-
-	public void Activate()
-	{
-		isActive = true;
-		if (crosshair)
-			crosshair.enabled = false;
-		controller.ActivateGuiMode();
-		timeScalePrev = Time.timeScale;
-		if (pauseGame)
-			Time.timeScale = 0;
-		if(cameraFx)
-			cameraFx.ActivateMenuEffects();
-
-		subInterfaces[subIfaceCurrent].Show();
-	}
-
-	public void Deactivate()
-	{
-		isActive = false;
-		if (crosshair)
-			crosshair.enabled = true;
-		controller.DeactivateGuiMode();
-		Time.timeScale = timeScalePrev;
-		if(cameraFx)
-			cameraFx.DeactivateMenuEffects();
 		
-		subInterfaces[subIfaceCurrent].Hide();
-	}
 
 	public void Toggle()
 	{
-		if (isActive)
-			Deactivate();
-		else
-			Activate();
+		if (!isActive) {
+			ControlManager.Instance.ActivateGuiMode(false);
+			subInterfaces[subIfaceCurrent].Hide();
+			if(cameraFx)
+				cameraFx.ActivateMenuEffects();
+		}
+		else {
+			ControlManager.Instance.DeactivateGuiMode();
+			subInterfaces[subIfaceCurrent].Show();
+			if(cameraFx)
+				cameraFx.DeactivateMenuEffects();
+		}
+		isActive = !isActive;
 	}
 
 

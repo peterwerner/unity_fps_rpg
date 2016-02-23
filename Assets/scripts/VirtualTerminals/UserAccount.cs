@@ -5,8 +5,8 @@ using System;
 [Serializable]
 public class UserAccount {
 
-	public string username { get{return username;} private set{username = value;} }
-	public string password { get{return password;} private set{password = value;} }
+	[SerializeField] private string username;
+	[SerializeField] private string password;
 
 	public bool Authenticate(string username, string password)
 	{
