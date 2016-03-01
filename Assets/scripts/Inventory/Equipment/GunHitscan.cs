@@ -17,7 +17,7 @@ public class GunHitscan : Equipment {
 	public AudioClip audioShoot;
 	public float soundLevel = 30f;
 	public LayerMask layers;
-	public ParticleSystem particleImpact;
+	public EffectTemporary muzzleFlashEffect;
 
 	protected Transform aimOriginTransform;
 	private int numBulletsLoaded;
@@ -85,12 +85,22 @@ public class GunHitscan : Equipment {
 		Ray ray = new Ray(aimOriginTransform.position, aimTarget.target - aimOriginTransform.position);
 		if (Physics.Raycast(ray, out hit, maxRange, layers)) 
 		{
-			// Spawn impact particle
-			if (particleImpact) {
-				particleImpact.transform.position = hit.point;
-				particleImpact.transform.rotation = Quaternion.LookRotation(hit.normal);
-				particleImpact.Emit(5);
+			// Spawn muzzle flash particle
+			if (muzzleFlashEffect) {
+				Transform barrel = null;
+				if (viewModel)
+					barrel = viewModel.points[0];
+				else if (worldModel)
+					barrel = viewModel.points[0];
+				if (barrel) {
+					EffectTemporary flash = (EffectTemporary)Instantiate(muzzleFlashEffect, barrel.position, barrel.rotation);
+					flash.transform.parent = aimOriginTransform;
+					flash.transform.forward = aimOriginTransform.forward;
+				}
 			}
+
+			// Spawn impact particle
+			MaterialFxManager.Instance.DoBulletImpactFx(hit);
 
 			// Damage object
 			Damageable damageable = hit.collider.GetComponentInChildren<Damageable>();
@@ -149,8 +159,6 @@ public class GunHitscan : Equipment {
 		audioSrc.transform.localPosition = Vector3.zero;
 
 		//aimOriginTransform = viewModel.points[0];
-
-		// Alternatively, simply use the camera as the origin
 		aimOriginTransform = viewModelCamera.transform;
 
 		return true;

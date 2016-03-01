@@ -10,7 +10,9 @@ public class MouseTracker : MonoBehaviour {
 	[SerializeField] private float width, height;
 	[SerializeField] private Camera playerCam;
 	[SerializeField] private Camera terminalCam;
+	[SerializeField] private Canvas canvas;
 	[SerializeField] private float maxDist = 10f;
+	[SerializeField] private Transform cursorObj;
 	private Vector2 cursorPos;
 
 	
@@ -29,7 +31,17 @@ public class MouseTracker : MonoBehaviour {
 				rotated.x * 2 * camHalfWidth / width,
 				rotated.y * 2 * camHalfHeight / height
 			);
+			if (cursorObj) {
+				cursorObj.localPosition = new Vector3(cursorPos.x * canvas.pixelRect.height, cursorPos.y * canvas.pixelRect.height, cursorObj.localPosition.z);
+			}
 		}
+	}
+
+	void OnDisable() {
+		cursorObj.gameObject.SetActive(false);
+	}
+	void OnEnable	() {
+		cursorObj.gameObject.SetActive(true);
 	}
 		
 	public Vector2 GetCursorPos() { return cursorPos; }

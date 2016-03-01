@@ -61,7 +61,7 @@ public class InterfaceLogin {
 		usernameField.text = emptyUsername + inputUsername;
 		passwordField.text = emptyPassword + inputPassword;
 		// Update flashing cursor
-		if (Time.time - cursorTimeLastFlashed	 > cursorFlashDuration) {
+		if (Time.time - cursorTimeLastFlashed > cursorFlashDuration) {
 			cursorOn = !cursorOn;
 			cursorTimeLastFlashed = Time.time;
 		}
