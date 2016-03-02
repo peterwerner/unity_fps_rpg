@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-//using RootMotion.Dynamics;
+using RootMotion.Dynamics;
 
 public class CharacterStats : Damageable {
 
@@ -9,9 +9,10 @@ public class CharacterStats : Damageable {
 
 	public float healthMax = 100f;
 	public float health = 100f;
-	//public PuppetMaster puppetMaster;
-	//[Tooltip("Settings for killing and freezing the puppet.")]
-	//public PuppetMaster.StateSettings stateSettings = PuppetMaster.StateSettings.Default;
+	public PuppetMaster puppetMaster;
+	[Tooltip("Settings for killing and freezing the puppet.")]
+	public PuppetMaster.StateSettings stateSettings = PuppetMaster.StateSettings.Default;
+	public float puppetUnpin = 5, puppetForceMultiplier = 100;
 	[Tooltip("When killed / KO'd these behaviours will be disabled")]
 	[SerializeField] private MonoBehaviour[] lifeDependentBehaviours;
 
@@ -34,20 +35,31 @@ public class CharacterStats : Damageable {
 
 	public void Damage(float damage)
 	{
-		Damage(damage, 0, new RaycastHit(), Vector3.zero);
+		health -= damage;
 	}
 	public override void Damage(float damage, float force, RaycastHit hit, Vector3 direction)
 	{
-		// Update health to reflect damage
-		health -= damage;
+		float damageMultiplier = 1, unpinMultiplier = 1;
+		// Take into account hitboxes
+		HitBoxStats hitbox = hit.collider.GetComponent<HitBoxStats>();
+		if (hitbox) {
+			damageMultiplier = hitbox.damageMultiplier;
+			unpinMultiplier = hitbox.unpinMultiplier;
+		}
+		// Affect puppet master ragdolls
+		var broadcaster = hit.collider.attachedRigidbody.GetComponent<MuscleCollisionBroadcaster>();
+		if (broadcaster != null)
+			broadcaster.Hit(puppetUnpin * unpinMultiplier, direction * force * puppetForceMultiplier, hit.point);
+		// Do damage
+		Damage(damage * damageMultiplier);
 	}
 
 
 	public virtual void Knockout()
 	{
 		state = State.UNCONSCIOUS;
-		//if (puppetMaster != null)
-			//puppetMaster.Kill(stateSettings);
+		if (puppetMaster)
+			puppetMaster.Kill(stateSettings);
 		disableBehaviours();
 	}
 
@@ -55,8 +67,8 @@ public class CharacterStats : Damageable {
 	public virtual void Kill() 
 	{
 		state = State.DEAD;
-		//if (puppetMaster != null)
-			//puppetMaster.Kill(stateSettings);
+		if (puppetMaster)
+			puppetMaster.Kill(stateSettings);
 		disableBehaviours();
 	}
 
@@ -71,8 +83,8 @@ public class CharacterStats : Damageable {
 			return;
 		state = State.ALIVE;
 		health = Mathf.Max(newHealth, healthMax);
-		//if (puppetMaster != null)
-			//puppetMaster.Resurrect();
+		if (puppetMaster)
+			puppetMaster.Resurrect();
 		enableBehaviours();
 	}
 

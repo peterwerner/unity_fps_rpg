@@ -23,8 +23,10 @@ public class MaterialFxManager : SingletonComponent<MaterialFxManager> {
 	void Start() 
 	{
 		// Move all the serialized data into the hashmap, then get rid of the serialized list
-		foreach (MaterialFxSerialize serialized in materialSpecificEffects)
-			map.Add(serialized.material, new MaterialFxInstance(serialized));
+		foreach (MaterialFxSerialize serialized in materialSpecificEffects) {
+			foreach (PhysicMaterial mat in serialized.materials)
+				map.Add(mat, new MaterialFxInstance(serialized));
+		}
 		materialSpecificEffects = null;
 	}
 
@@ -45,8 +47,9 @@ public class MaterialFxManager : SingletonComponent<MaterialFxManager> {
 	{
 		if (material == null)
 			return defaultEffects.GetImpactSound();
-		MaterialFxInstance effects = map[material];
-		if (effects != null)
+		MaterialFxInstance effects;
+		bool success = map.TryGetValue(material, out effects);
+		if (success)
 			return effects.GetImpactSound();
 		return defaultEffects.GetImpactSound();
 	}
@@ -56,8 +59,9 @@ public class MaterialFxManager : SingletonComponent<MaterialFxManager> {
 	{
 		if (material == null)
 			return defaultEffects.GetImpactEffect();
-		MaterialFxInstance effects = map[material];
-		if (effects != null)
+		MaterialFxInstance effects;
+		bool success = map.TryGetValue(material, out effects);
+		if (success)
 			return effects.GetImpactEffect();
 		return defaultEffects.GetImpactEffect();
 	}

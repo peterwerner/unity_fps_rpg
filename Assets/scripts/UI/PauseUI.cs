@@ -107,13 +107,13 @@ public class PauseUI : MonoBehaviour {
 	{
 		if (!isActive) {
 			ControlManager.Instance.ActivateGuiMode(false);
-			subInterfaces[subIfaceCurrent].Hide();
+			subInterfaces[subIfaceCurrent].Show();
 			if(cameraFx)
 				cameraFx.ActivateMenuEffects();
 		}
 		else {
 			ControlManager.Instance.DeactivateGuiMode();
-			subInterfaces[subIfaceCurrent].Show();
+			subInterfaces[subIfaceCurrent].Hide();
 			if(cameraFx)
 				cameraFx.DeactivateMenuEffects();
 		}

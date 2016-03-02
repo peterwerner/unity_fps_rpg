@@ -10,7 +10,7 @@ using System;
 [Serializable]
 public class MaterialFxSerialize {
 
-	[SerializeField] public PhysicMaterial material;
+	[SerializeField] public PhysicMaterial[] materials;
 	[SerializeField] public AudioClip[] impactSounds;
 	[SerializeField] public EffectTemporary impactEffect;
 

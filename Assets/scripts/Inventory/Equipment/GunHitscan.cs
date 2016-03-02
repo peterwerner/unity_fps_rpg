@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-//using RootMotion.Dynamics;
 using System.Collections.Generic;
 
 
@@ -16,10 +15,11 @@ public class GunHitscan : Equipment {
 	public Ammo.Type ammoType;
 	public AudioClip audioShoot;
 	public float soundLevel = 30f;
-	public LayerMask layers;
 	public EffectTemporary muzzleFlashEffect;
+	public LayerMask layermaskWorld, layermaskView;
 
 	protected Transform aimOriginTransform;
+	private LayerMask layers;
 	private int numBulletsLoaded;
 	private float timeSinceLastShot = 0f;
 	private AudioSource audioSrc;
@@ -161,6 +161,8 @@ public class GunHitscan : Equipment {
 		//aimOriginTransform = viewModel.points[0];
 		aimOriginTransform = viewModelCamera.transform;
 
+		this.layers = layermaskView;
+
 		return true;
 	}
 	public override bool ActivateWorldModel(Transform worldModelParent) {
@@ -171,6 +173,8 @@ public class GunHitscan : Equipment {
 		audioSrc.transform.localPosition = Vector3.zero;
 
 		aimOriginTransform = worldModel.points[0];
+
+		this.layers = layermaskWorld;
 
 		return true;
 	}
