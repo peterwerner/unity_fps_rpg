@@ -8,6 +8,7 @@ using UnityStandardAssets.CrossPlatformInput;
 public class PauseUI : MonoBehaviour {
 
 	[SerializeField] private GUISkin GuiSkin;
+	[SerializeField] private bool pauseGame;
 	[SerializeField] BaseUI[] subInterfaces;
 	[SerializeField] [Range(0f, 1f)] private float heightTopBanner = 0.1f, paddingBannerSide = 0.1f, alphaTopBanner = 0.5f;
 	[SerializeField] CameraFx cameraFx;
@@ -106,7 +107,7 @@ public class PauseUI : MonoBehaviour {
 	public void Toggle()
 	{
 		if (!isActive) {
-			ControlManager.Instance.ActivateGuiMode(false);
+			ControlManager.Instance.ActivateGuiMode();
 			subInterfaces[subIfaceCurrent].Show();
 			if(cameraFx)
 				cameraFx.ActivateMenuEffects();

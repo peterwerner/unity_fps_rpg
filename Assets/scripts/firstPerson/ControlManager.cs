@@ -18,7 +18,7 @@ public class ControlManager : SingletonComponent<ControlManager> {
 
 	void Start() {
 		Screen.lockCursor = true;
-}
+	}
 
 
 	public void ActivateGuiMode() {

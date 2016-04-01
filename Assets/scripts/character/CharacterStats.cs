@@ -12,7 +12,7 @@ public class CharacterStats : Damageable {
 	public PuppetMaster puppetMaster;
 	[Tooltip("Settings for killing and freezing the puppet.")]
 	public PuppetMaster.StateSettings stateSettings = PuppetMaster.StateSettings.Default;
-	public float puppetUnpin = 5, puppetForceMultiplier = 100;
+	public float puppetUnpin = 0.5f, puppetForceMultiplier = 100;
 	[Tooltip("When killed / KO'd these behaviours will be disabled")]
 	[SerializeField] private MonoBehaviour[] lifeDependentBehaviours;
 
@@ -49,7 +49,7 @@ public class CharacterStats : Damageable {
 		// Affect puppet master ragdolls
 		var broadcaster = hit.collider.attachedRigidbody.GetComponent<MuscleCollisionBroadcaster>();
 		if (broadcaster != null)
-			broadcaster.Hit(puppetUnpin * unpinMultiplier, direction * force * puppetForceMultiplier, hit.point);
+			broadcaster.Hit(puppetUnpin * unpinMultiplier * force, direction * force * puppetForceMultiplier, hit.point);
 		// Do damage
 		Damage(damage * damageMultiplier);
 	}

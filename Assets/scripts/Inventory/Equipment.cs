@@ -14,7 +14,7 @@ using System.Collections;
 public class Equipment : MonoBehaviour {
 
 	public Equipable equipablePrefab;	// Corresponding world item prefab
-	[HideInInspector] public Equipable equipable;
+	public Equipable equipable;
 	public Vector3 dropOffset;			// Offset from the camera position when the equipable is dropped
 	public InventoryGridItem inventoryGridItem;		// Corresponding UI grid item
 	protected AimTarget aimTarget;		// Tracks what this equipment is aiming at

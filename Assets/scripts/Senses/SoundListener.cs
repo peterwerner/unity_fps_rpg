@@ -3,18 +3,33 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
+
+public class SoundRecord {
+	public Sound.Type soundType;
+	public float effectiveSoundLevel;
+	public Vector3 location;
+	public float timeHeard;
+	public SoundRecord(Sound.Type soundType, float effectiveSoundLevel, Vector3 location) {
+		this.soundType = soundType;
+		this.effectiveSoundLevel = effectiveSoundLevel;
+		this.location = location;
+		this.timeHeard = Time.time;
+	}
+}
+
+
 public class SoundListener : MonoBehaviour {
 
 	[SerializeField] private float listenStrengthFactor = 1;
 	[SerializeField] private LayerMask layerMask;
-	[HideInInspector] public List<Vector3> soundLocations;
+	[HideInInspector] public List<SoundRecord> soundMemory;
 
 
 	// Use this for initialization
 	void Start () {
-		soundLocations = new List<Vector3>();
+		soundMemory = new List<SoundRecord>();
 	}
-	
+
 	// Update is called once per frame
 	void FixedUpdate () 
 	{
@@ -33,15 +48,8 @@ public class SoundListener : MonoBehaviour {
 					effectiveSoundLevel *= Sound.wallDampenFactor;
 			}
 			if (dist < effectiveSoundLevel)
-				Hear(sound);
+				soundMemory.Add(new SoundRecord(sound.soundType, effectiveSoundLevel, sound.transform.position));
 		}
-	}
-
-
-	private void Hear(Sound sound) 
-	{
-		soundLocations.Add(sound.transform.position);
-		//print("Heard a " + sound.soundType.ToString());
 	}
 
 }

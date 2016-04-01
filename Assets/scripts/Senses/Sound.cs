@@ -2,9 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 
+
 public class Sound : ListComponent<Sound> {
 
-	public enum Type { DEFAULT, GUNSHOT, EXPLOSION, DOOR, FOOTSTEP, SPEECH };
+	public enum Type { DEFAULT=0, GUNSHOT=10, WEAPONIMPACT=5, PHYSIMPACT=0, EXPLOSION=15, DOOR=0, FOOTSTEP=0, SPEECH=0 };
 
 	[Tooltip("If something is in the way of a sound and a listener, by what factor should the soundLevel be multiplied?")]
 	public static float wallDampenFactor = 0.5f;
